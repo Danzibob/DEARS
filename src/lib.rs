@@ -1,3 +1,5 @@
+#![feature(generic_const_exprs)]
+
 pub mod individual;
 pub mod mutation;
 pub mod crossover;

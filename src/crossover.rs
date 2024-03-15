@@ -1,5 +1,12 @@
 use rand::Rng;
 
+/// Trait defining an in-place mutation function to be implemented
+/// by all mutation functions
+pub trait Crossover<G: ?Sized> {
+    fn crossover(&self, a: &mut G, b: &mut G);
+}
+
+
 /// Performs one-point crossover between the two inputs
 /// 
 /// Modifies in place two individuals of the same type, swapping
