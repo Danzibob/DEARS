@@ -1,12 +1,7 @@
-#![feature(generic_const_exprs)]
-
-pub mod individual;
+pub mod population;
 pub mod mutation;
 pub mod crossover;
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod selection;
 
 #[cfg(test)]
 mod tests {

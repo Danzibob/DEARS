@@ -2,13 +2,10 @@ use dears::mutation::*;
 use rand::{thread_rng, Rng};
 
 type Genome = [bool; 10];
-type Fitness = [f64; 1];
+type Fitness = f64;
 
 fn fitness(individual: Genome) -> Fitness {
-    return [
-        // fitness is the count of "True" in the array
-        individual.iter().filter(|&x| *x).count() as f64
-        ]
+    individual.iter().filter(|&x| *x).count() as f64
 }
 
 fn main(){
