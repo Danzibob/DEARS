@@ -3,7 +3,7 @@ use rand_distr::{Distribution, Normal};
 
 /// Trait defining an in-place mutation function to be implemented
 /// by all mutation functions
-pub trait Mutator<G: ?Sized>{
+pub trait Mutator<G: ?Sized> {
     fn mutate(&self, genome: &mut G);
 }
 
@@ -38,12 +38,14 @@ impl Mutator<[f64]> for Gaussian {
         // Initialize the random distribution
         let mut rng = rand::thread_rng();
         let normal = Normal::new(self.mu, self.sigma).unwrap_or_else(|_| {
-            panic!("Invalid args to Normal Distribution: sigma={} mu={}",
-                    self.sigma, self.mu)
+            panic!(
+                "Invalid args to Normal Distribution: sigma={} mu={}",
+                self.sigma, self.mu
+            )
         });
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let val = normal.sample(&mut rng);
                 *ind += val;
             }
@@ -76,7 +78,7 @@ impl<T: Clone> Mutator<[T]> for Shuffle {
         // For each index of the list, if indpb is met
         // Swap with another random index of the list
         for idx in 0..size {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let mut swap_idx: usize = rng.gen_range(0..(size - 2));
                 if swap_idx >= idx {
                     swap_idx += 1
@@ -90,7 +92,7 @@ impl<T: Clone> Mutator<[T]> for Shuffle {
 /// Flips random items in a slice of `bool`
 ///
 /// Modifies an individual (a slice of bool) in place, flipping individual values with
-/// probability `indpb`. 
+/// probability `indpb`.
 ///
 /// # Examples
 /// ```
@@ -109,7 +111,7 @@ impl Mutator<[bool]> for FlipBit {
     fn mutate(&self, genome: &mut [bool]) {
         let mut rng = rand::thread_rng();
         for i in 0..(genome.len()) {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 genome[i] = !genome[i];
             }
         }
@@ -128,7 +130,7 @@ mod tests {
         let mutator = Gaussian {
             mu: 0.0,
             sigma: 1.0,
-            indpb: 0.5
+            indpb: 0.5,
         };
         mutator.mutate(&mut test_input);
         println!("Gaussian:  {:?}", test_input);
