@@ -1,10 +1,14 @@
-use rand::Rng;
+use rand::{Rng, thread_rng};
 use rand_distr::{Distribution, Normal};
 
 /// Trait defining an in-place mutation function to be implemented
 /// by all mutation functions
 pub trait Mutator<G: ?Sized>{
-    fn mutate(&self, genome: &mut G);
+    fn mutate_with(&self, genome: &mut G, rng: &mut impl Rng);
+    fn mutate(&self, genome: &mut G) {
+        let mut rng = thread_rng();
+        self.mutate_with(genome, &mut rng);
+    }
 }
 
 /// Applies a per-element gaussian mutation of mean `mu` and std dev `sigma`
@@ -34,9 +38,8 @@ pub struct Gaussian {
 }
 
 impl Mutator<[f64]> for Gaussian {
-    fn mutate(&self, genome: &mut [f64]) {
+    fn mutate_with(&self, genome: &mut [f64], rng: &mut impl Rng) {
         // Initialize the random distribution
-        let mut rng = rand::thread_rng();
         let normal = Normal::new(self.mu, self.sigma).unwrap_or_else(|_| {
             panic!("Invalid args to Normal Distribution: sigma={} mu={}",
                     self.sigma, self.mu)
@@ -44,7 +47,7 @@ impl Mutator<[f64]> for Gaussian {
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
             if rng.gen::<f64>() < self.indpb {
-                let val = normal.sample(&mut rng);
+                let val = normal.sample(rng);
                 *ind += val;
             }
         }
@@ -70,8 +73,7 @@ pub struct Shuffle {
 }
 
 impl<T: Clone> Mutator<[T]> for Shuffle {
-    fn mutate(&self, genome: &mut [T]) {
-        let mut rng = rand::thread_rng();
+    fn mutate_with(&self, genome: &mut [T], rng: &mut impl Rng) {
         let size = genome.len();
         // For each index of the list, if indpb is met
         // Swap with another random index of the list
@@ -106,8 +108,7 @@ pub struct FlipBit {
 }
 
 impl Mutator<[bool]> for FlipBit {
-    fn mutate(&self, genome: &mut [bool]) {
-        let mut rng = rand::thread_rng();
+    fn mutate_with(&self, genome: &mut [bool], rng: &mut impl Rng) {
         for i in 0..(genome.len()) {
             if rng.gen::<f64>() < self.indpb {
                 genome[i] = !genome[i];
