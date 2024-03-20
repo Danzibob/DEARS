@@ -1,10 +1,97 @@
+use std::marker::PhantomData;
+
+use num_traits::Float;
+use rand::distributions::Distribution;
 use rand::Rng;
-use rand_distr::{Distribution, Normal};
+use rand_distr::{Normal, StandardNormal};
 
 /// Trait defining an in-place mutation function to be implemented
 /// by all mutation functions
-pub trait Mutator<G: ?Sized>{
+pub trait Mutator<G: ?Sized> {
     fn mutate(&self, genome: &mut G);
+}
+
+/// Applies a per-element mutation sampled from a probability distribution
+///
+/// Modifies an individual (a slice of f64) in place, changing individual values with
+/// probability `indpb` by a random amount from a distribution.
+///
+/// # Examples
+///
+/// ```
+/// use dears::mutation::*;
+/// use rand::distributions::Uniform;
+/// let mut vals = vec![1.0, 2.0, 3.0, 4.0];
+/// let dist = Uniform::new(0.3, 1.2);
+/// // indpb = 0.5
+/// let mutator = ByDist::new(dist, 0.5);
+/// mutator.mutate(&mut vals);
+/// // Vals has now been mutated!
+/// println!("Uniform mutation: {:?}", vals);
+/// ```
+///
+/// ```
+/// use dears::mutation::*;
+/// let mut vals = vec![1.0, 2.0, 3.0, 4.0];
+/// // mu = 0.0, sigma = 1.0, indpb = 0.5
+/// let mutator = ByDist::gaussian(
+///     0.0,
+///     1.0,
+///     0.5
+/// ).unwrap();
+/// mutator.mutate(&mut vals);
+/// // Vals has now been mutated!
+/// println!("Gaussian: {:?}", vals);
+/// ```
+pub struct ByDist<F, D> {
+    dist: D,
+    // NOTE: this must be f64 because that's what Rng::gen_bool takes
+    indpb: f64,
+    _marker: PhantomData<F>,
+}
+
+impl<F: num_traits::Float, D: Distribution<F>> ByDist<F, D> {
+    /// Creates a new `ByDist`
+    pub fn new(dist: D, indpb: f64) -> Self {
+        Self {
+            dist,
+            indpb,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<F> ByDist<F, rand_distr::Normal<F>>
+where
+    F: num_traits::Float,
+    StandardNormal: Distribution<F>,
+{
+    pub fn gaussian(mean: F, stddev: F, indpb: f64) -> Result<Self, rand_distr::NormalError> {
+        let dist = Normal::new(mean, stddev)?;
+        Ok(Self {
+            dist,
+            indpb,
+            _marker: PhantomData,
+        })
+    }
+}
+
+impl<F, D, G> Mutator<G> for ByDist<F, D> 
+where
+    F: Float,
+    D: Distribution<F>,
+    G: AsMut<[F]>,
+{
+    fn mutate(&self, genome: &mut G) {
+        let mut rng = rand::thread_rng();
+        // Apply the random noise to selected genes
+        for ind in genome.as_mut() {
+            if rng.gen::<f64>() < self.indpb {
+                let val = self.dist.sample(&mut rng);
+                *ind = *ind + val;
+            }
+        }
+    }
 }
 
 /// Applies a per-element gaussian mutation of mean `mu` and std dev `sigma`
@@ -38,8 +125,10 @@ impl Mutator<[f64]> for Gaussian {
         // Initialize the random distribution
         let mut rng = rand::thread_rng();
         let normal = Normal::new(self.mu, self.sigma).unwrap_or_else(|_| {
-            panic!("Invalid args to Normal Distribution: sigma={} mu={}",
-                    self.sigma, self.mu)
+            panic!(
+                "Invalid args to Normal Distribution: sigma={} mu={}",
+                self.sigma, self.mu
+            )
         });
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
