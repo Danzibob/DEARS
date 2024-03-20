@@ -24,7 +24,7 @@ fn main(){
 
     for gen in 0..N_GENS {
         for ind in 0..POP_SIZE {
-            if rng.gen::<f64>() < MUTATE_PROB {
+            if rng.gen_bool(MUTATE_PROB) {
                 mutator.mutate(&mut pop[ind]);
             }
         }

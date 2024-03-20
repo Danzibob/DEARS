@@ -43,7 +43,7 @@ impl Mutator<[f64]> for Gaussian {
         });
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let val = normal.sample(&mut rng);
                 *ind += val;
             }
@@ -76,7 +76,7 @@ impl<T: Clone> Mutator<[T]> for Shuffle {
         // For each index of the list, if indpb is met
         // Swap with another random index of the list
         for idx in 0..size {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let mut swap_idx: usize = rng.gen_range(0..(size - 2));
                 if swap_idx >= idx {
                     swap_idx += 1
@@ -109,7 +109,7 @@ impl Mutator<[bool]> for FlipBit {
     fn mutate(&self, genome: &mut [bool]) {
         let mut rng = rand::thread_rng();
         for i in 0..(genome.len()) {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 genome[i] = !genome[i];
             }
         }

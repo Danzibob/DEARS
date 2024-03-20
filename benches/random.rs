@@ -26,7 +26,7 @@ impl Mutator<[f64]> for Gaussian {
         });
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let val = normal.sample(&mut rng);
                 *ind += val;
             }
@@ -50,7 +50,7 @@ impl RngMutator<[f64]> for RngGaussian {
     fn mutate(&self, genome: &mut [f64], rng: &mut ThreadRng, dist: Normal<f64>) {
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
-            if rng.gen::<f64>() < self.indpb {
+            if rng.gen_bool(self.indpb) {
                 let val = dist.sample(rng);
                 *ind += val;
             }
