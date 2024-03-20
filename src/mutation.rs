@@ -3,7 +3,7 @@ use rand_distr::{Distribution, Normal};
 
 /// Trait defining an in-place mutation function to be implemented
 /// by all mutation functions
-pub trait Mutator<G: ?Sized> {
+pub trait Mutator<G: ?Sized>{
     fn mutate(&self, genome: &mut G);
 }
 
@@ -38,10 +38,8 @@ impl Mutator<[f64]> for Gaussian {
         // Initialize the random distribution
         let mut rng = rand::thread_rng();
         let normal = Normal::new(self.mu, self.sigma).unwrap_or_else(|_| {
-            panic!(
-                "Invalid args to Normal Distribution: sigma={} mu={}",
-                self.sigma, self.mu
-            )
+            panic!("Invalid args to Normal Distribution: sigma={} mu={}",
+                    self.sigma, self.mu)
         });
         // Apply the random noise to selected genes
         for ind in genome.iter_mut() {
@@ -92,7 +90,7 @@ impl<T: Clone> Mutator<[T]> for Shuffle {
 /// Flips random items in a slice of `bool`
 ///
 /// Modifies an individual (a slice of bool) in place, flipping individual values with
-/// probability `indpb`.
+/// probability `indpb`. 
 ///
 /// # Examples
 /// ```
@@ -130,7 +128,7 @@ mod tests {
         let mutator = Gaussian {
             mu: 0.0,
             sigma: 1.0,
-            indpb: 0.5,
+            indpb: 0.5
         };
         mutator.mutate(&mut test_input);
         println!("Gaussian:  {:?}", test_input);
