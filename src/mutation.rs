@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<F, D, G> Mutator<G> for ByDist<F, D> 
+impl<F, D, G> Mutator<G> for ByDist<F, D>
 where
     F: Float,
     D: Distribution<F>,
@@ -89,52 +89,6 @@ where
             if rng.gen::<f64>() < self.indpb {
                 let val = self.dist.sample(&mut rng);
                 *ind = *ind + val;
-            }
-        }
-    }
-}
-
-/// Applies a per-element gaussian mutation of mean `mu` and std dev `sigma`
-///
-/// Modifies an individual (a slice of f64) in place, changing individual values with
-/// probability `indpb` by a random amount from a gaussian distribution defined by
-/// the mean `mu` and standard deviation `sigma`.
-///
-/// # Examples
-/// ```
-/// use dears::mutation::*;
-/// let mut vals = vec![1.0, 2.0, 3.0, 4.0];
-/// // mu = 0.0, sigma = 1.0, indpb = 0.5
-/// let mutator = Gaussian {
-///     mu: 0.0,
-///     sigma: 1.0,
-///     indpb: 0.5
-/// };
-/// mutator.mutate(&mut vals);
-/// // Vals has now been mutated!
-/// println!("Gaussian: {:?}", vals);
-/// ```
-pub struct Gaussian {
-    pub mu: f64,
-    pub sigma: f64,
-    pub indpb: f64,
-}
-
-impl Mutator<[f64]> for Gaussian {
-    fn mutate(&self, genome: &mut [f64]) {
-        // Initialize the random distribution
-        let mut rng = rand::thread_rng();
-        let normal = Normal::new(self.mu, self.sigma).unwrap_or_else(|_| {
-            panic!(
-                "Invalid args to Normal Distribution: sigma={} mu={}",
-                self.sigma, self.mu
-            )
-        });
-        // Apply the random noise to selected genes
-        for ind in genome.iter_mut() {
-            if rng.gen::<f64>() < self.indpb {
-                let val = normal.sample(&mut rng);
-                *ind += val;
             }
         }
     }
@@ -214,11 +168,7 @@ mod tests {
     #[test]
     fn gaussian() {
         let mut test_input = vec![1.0, 2.0, 3.0, 4.0];
-        let mutator = Gaussian {
-            mu: 0.0,
-            sigma: 1.0,
-            indpb: 0.5
-        };
+        let mutator = ByDist::gaussian(0.0, 1.0, 0.5).unwrap();
         mutator.mutate(&mut test_input);
         println!("Gaussian:  {:?}", test_input);
     }
