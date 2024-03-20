@@ -66,6 +66,10 @@ where
     F: num_traits::Float,
     StandardNormal: Distribution<F>,
 {
+    /// Creates a new `ByDist` using a Gaussian distribution
+    ///
+    /// Samples from a Gaussian distribution with mean `mean` and standard deviation `stddev`.
+    /// Uses [`rand_distr::Normal`] under the hood.
     pub fn gaussian(mean: F, stddev: F, indpb: f64) -> Result<Self, rand_distr::NormalError> {
         let dist = Normal::new(mean, stddev)?;
         Ok(Self {
